@@ -22,10 +22,12 @@ func handleErr(err error) {
 func getMoments(flowClient *client.Client, ctx context.Context, addr string) {
 	getMomentScript := `
 			import TopShot from 0x0b2a3299cc857e29
-			pub fun main(owner:Address): [UInt64] {
+			pub fun main(owner:Address): {String: String} {
 				let acct = getAccount(owner)
 				let collectionRef = acct.getCapability(/public/MomentCollection)!.borrow<&{TopShot.MomentCollectionPublic}>() ?? panic("Could not borrow capability from public collection")
-				return collectionRef.getIDs()!
+				let oneID = collectionRef.getIDs()[0]!
+				let moment = collectionRef.borrowMoment(id: oneID)!
+				return TopShot.getPlayMetaData(playID: moment.data.playID)!
 			}
 `
 
