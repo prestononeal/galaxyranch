@@ -10,7 +10,10 @@ function App() {
         <p>
           NFT Ranch
         </p>
-        <MomentsComponent />
+        <div>
+          NBA Top Shot moments:
+          <MomentsComponent />
+        </div>
       </header>
     </div>
   );

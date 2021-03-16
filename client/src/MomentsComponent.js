@@ -23,7 +23,7 @@ class MomentsComponent extends Component {
     }
 
     render() {
-        return <h1>Moments: {this.state.moments}</h1>;
+        return <div>{this.state.moments}</div>;
     }
 }
 
