@@ -13,21 +13,48 @@ import (
 	"google.golang.org/grpc"
 )
 
-func handleErr(err error) {
-	if err != nil {
-		 panic(err)
-	}
+/*
+type Moment struct {
+	playID int
+	fullName string
+	date string
 }
+*/
+
+type Moments cadence.Array
 
 func getMoments(flowClient *client.Client, ctx context.Context, addr string) {
 	getMomentScript := `
 			import TopShot from 0x0b2a3299cc857e29
-			pub fun main(owner:Address): {String: String} {
+
+			pub struct Moment {
+				pub var id: UInt64
+				pub var playId: UInt32
+				pub var play: {String: String}
+				pub var setId: UInt32
+				pub var setName: String
+				pub var serialNumber: UInt32
+				pub var forSale: Bool
+				init(moment: &TopShot.NFT, forSale: Bool) {
+					self.id = moment.id
+					self.playId = moment.data.playID
+					self.play = TopShot.getPlayMetaData(playID: self.playId)!
+					self.setId = moment.data.setID
+					self.setName = TopShot.getSetName(setID: self.setId)!
+					self.serialNumber = moment.data.serialNumber
+					self.forSale = forSale
+				}
+			}
+
+			pub fun main(owner:Address): [Moment] {
 				let acct = getAccount(owner)
 				let collectionRef = acct.getCapability(/public/MomentCollection)!.borrow<&{TopShot.MomentCollectionPublic}>() ?? panic("Could not borrow capability from public collection")
-				let oneID = collectionRef.getIDs()[0]!
-				let moment = collectionRef.borrowMoment(id: oneID)!
-				return TopShot.getPlayMetaData(playID: moment.data.playID)!
+				let momentIDs = collectionRef.getIDs()!
+				let moments = [] as [Moment]
+				for id in momentIDs {
+					moments.append(Moment(moment: collectionRef.borrowMoment(id: id)!, forSale: false))
+				}
+				return moments
 			}
 `
 
@@ -37,7 +64,14 @@ func getMoments(flowClient *client.Client, ctx context.Context, addr string) {
 	if err != nil {
 		fmt.Println("error fetching sale moment from flow: %w", err)
 	} else {
-		fmt.Println("res: %w", res)
+		moments := Moments(res.(cadence.Array))
+		fmt.Println("moments: %w", moments)
+	}
+}
+
+func handleErr(err error) {
+	if err != nil {
+		 panic(err)
 	}
 }
 
@@ -52,6 +86,7 @@ func main() {
 
 	// Test
 	getMoments(flowClient, ctx, "0xee95377cce1c3f2b")
+
 
 	r := gin.Default()
 	// Dont worry about this line just yet, it will make sense in the Dockerise bit!
