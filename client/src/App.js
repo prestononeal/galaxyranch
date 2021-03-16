@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
-import PingComponent from './PingComponent';
+import MomentsComponent from './MomentsComponent';
 
 function App() {
   return (
@@ -8,9 +8,9 @@ function App() {
       <header className="App-header">
       <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Deploy React + Go to Heroku using Docker
+          NFT Ranch
         </p>
-        <PingComponent />
+        <MomentsComponent />
       </header>
     </div>
   );

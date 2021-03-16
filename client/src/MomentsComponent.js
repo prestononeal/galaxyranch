@@ -1,11 +1,11 @@
 import React, { Component } from 'react'
 import axios from 'axios';
-class PingComponent extends Component {
+class MomentsComponent extends Component {
 
     constructor() {
         super();
         this.state = {
-            pong: 'pending'
+            moments: 'pending'
         }
     }
 
@@ -13,8 +13,7 @@ class PingComponent extends Component {
         axios.get('api/moments')
             .then((response) => {
                 this.setState(() => {
-                    console.log(response.data.moments);
-                    return { pong: response.data.moments }
+                    return { moments: response.data.moments }
                 })
             })
             .catch(function (error) {
@@ -24,8 +23,8 @@ class PingComponent extends Component {
     }
 
     render() {
-        return <h1>Ping {this.state.pong}</h1>;
+        return <h1>Moments: {this.state.moments}</h1>;
     }
 }
 
-export default PingComponent; 
+export default MomentsComponent; 
