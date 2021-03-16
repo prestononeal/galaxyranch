@@ -6,6 +6,7 @@ import (
 
 	// Flow support
 	"context"
+	"encoding/json"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -69,9 +70,7 @@ func getMoments(flowClient *client.Client, ctx context.Context, addr string) Mom
 	res, err := flowClient.ExecuteScriptAtLatestBlock(context.Background(), []byte(getMomentScript), []cadence.Value{
 		cadence.BytesToAddress(flow.HexToAddress(addr).Bytes()),
 	})
-	if err != nil {
-		handleErr(err)
-	}
+	handleErr(err)
 	return Moments(res.(cadence.Array))
 }
 
@@ -84,17 +83,17 @@ func main() {
   err = flowClient.Ping(ctx)
   handleErr(err)
 
-	// Test
-	getMoments(flowClient, ctx, "0xee95377cce1c3f2b")
-
-
 	r := gin.Default()
 	// Dont worry about this line just yet, it will make sense in the Dockerise bit!
 	r.Use(static.Serve("/", static.LocalFile("./web", true)))
 	api := r.Group("/api")
-	api.GET("/ping", func(c *gin.Context) {
+	api.GET("/moments", func(c *gin.Context) {
+		moments := getMoments(flowClient, ctx, "0xee95377cce1c3f2b")
+		momentsJson, err := json.Marshal(moments)
+		handleErr(err)
+
 		c.JSON(200, gin.H{
-			"message": "pong",
+			"moments": string(momentsJson),
 		})
 	})
 

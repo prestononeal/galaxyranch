@@ -10,10 +10,11 @@ class PingComponent extends Component {
     }
 
     componentWillMount() {
-        axios.get('api/ping')
+        axios.get('api/moments')
             .then((response) => {
                 this.setState(() => {
-                    return { pong: response.data.message }
+                    console.log(response.data.moments);
+                    return { pong: response.data.moments }
                 })
             })
             .catch(function (error) {
