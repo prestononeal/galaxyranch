@@ -6,26 +6,25 @@ import (
 
 	// Flow support
 	"context"
-	"fmt"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
 )
 
-/*
-type Moment struct {
-	playID int
-	fullName string
-	date string
+
+func handleErr(err error) {
+	if err != nil {
+		 panic(err)
+	}
 }
-*/
 
 type Moments cadence.Array
 
-func getMoments(flowClient *client.Client, ctx context.Context, addr string) {
+func getMoments(flowClient *client.Client, ctx context.Context, addr string) Moments {
 	getMomentScript := `
 			import TopShot from 0x0b2a3299cc857e29
+			import Market from 0xc1e4f4f4c4257510
 
 			pub struct Moment {
 				pub var id: UInt64
@@ -48,31 +47,32 @@ func getMoments(flowClient *client.Client, ctx context.Context, addr string) {
 
 			pub fun main(owner:Address): [Moment] {
 				let acct = getAccount(owner)
+
+				// Get the moments that are not for sale
 				let collectionRef = acct.getCapability(/public/MomentCollection)!.borrow<&{TopShot.MomentCollectionPublic}>() ?? panic("Could not borrow capability from public collection")
 				let momentIDs = collectionRef.getIDs()!
 				let moments = [] as [Moment]
 				for id in momentIDs {
 					moments.append(Moment(moment: collectionRef.borrowMoment(id: id)!, forSale: false))
 				}
+
+				// Get the moments that are for sale
+				let collectionRefForSale = acct.getCapability(/public/topshotSaleCollection)!.borrow<&{Market.SalePublic}>() ?? panic("Could not borrow capability from public collection")
+				let momentIDsForSale = collectionRefForSale.getIDs()!
+				for id in momentIDsForSale {
+					moments.append(Moment(moment: collectionRefForSale.borrowMoment(id: id)!, forSale: true))
+				}
+				
 				return moments
 			}
 `
-
 	res, err := flowClient.ExecuteScriptAtLatestBlock(context.Background(), []byte(getMomentScript), []cadence.Value{
 		cadence.BytesToAddress(flow.HexToAddress(addr).Bytes()),
 	})
 	if err != nil {
-		fmt.Println("error fetching sale moment from flow: %w", err)
-	} else {
-		moments := Moments(res.(cadence.Array))
-		fmt.Println("moments: %w", moments)
+		handleErr(err)
 	}
-}
-
-func handleErr(err error) {
-	if err != nil {
-		 panic(err)
-	}
+	return Moments(res.(cadence.Array))
 }
 
 func main() {
